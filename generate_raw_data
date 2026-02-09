@@ -1,0 +1,115 @@
+// here is the coad i use this code in vs ... after going on final stage i gonna change this to make thing works in automation
+//  so for not it works in vs code only
+import random
+import pandas as pd
+from faker import Faker
+from typing import Iterator, List, Dict
+from pathlib import Path
+import os
+
+# Initialize Faker with 'en_IN' locale
+fake = Faker('en_IN')
+
+# --- Configuration & Bounds ---
+SPECIFIC_CITY = "Nagpur"
+DOMAINS = ['gmail.com', 'yahoo.com', 'outlook.in', 'hotmail.com']
+SEPARATORS = [".", "_", ""]
+
+# Geographic bounds for Nagpur
+MIN_LAT, MAX_LAT = 21.06179015, 21.22668231
+MIN_LON, MAX_LON = 78.95887014, 79.18719664
+
+def generate_email(full_name: str) -> str:
+    """Generate a valid email address from a name."""
+    clean_name = full_name.lower().replace(" ", random.choice(SEPARATORS))
+    # Remove any special characters that might cause issues
+    clean_name = ''.join(c for c in clean_name if c.isalnum() or c in ['.', '_'])
+    return f"{clean_name}{random.randint(1, 99)}@{random.choice(DOMAINS)}"
+
+def generate_phone_number() -> str:
+    """Generate a valid Indian phone number."""
+    return f"+91{random.randint(6, 9)}{fake.numerify('#########')}"
+
+def generate_refined_data(number_of_records: int, id_iterator: Iterator[int]) -> List[Dict]:
+    """
+    Generate refined consumer data for Nagpur.
+    
+    Args:
+        number_of_records: Number of records to generate
+        id_iterator: Iterator providing unique consumer IDs
+    
+    Returns:
+        List of dictionaries containing consumer data
+    """
+    records = []
+    generated_names = set()
+
+    for _ in range(number_of_records):
+        # Generate unique name
+        full_name = fake.name()
+        while full_name in generated_names:
+            full_name = fake.name()
+        generated_names.add(full_name)
+
+        id_number = next(id_iterator)
+        email = generate_email(full_name)
+        phone = generate_phone_number()
+        
+        # Generate coordinates within Nagpur bounds
+        lat = random.uniform(MIN_LAT, MAX_LAT)
+        lon = random.uniform(MIN_LON, MAX_LON)
+
+        records.append({
+            'name': full_name,
+            'city': SPECIFIC_CITY,
+            'unique_number': id_number,
+            'phone_number': phone,
+            'email': email,
+            'latitude': round(lat, 6),
+            'longitude': round(lon, 6),
+            'connection_date': fake.date_between(start_date='-1y', end_date='today').strftime("%d-%m-%Y"),
+        })
+    return records
+
+def main():
+    """Main execution function."""
+    # Configuration
+    num_rec = 10
+    min_id, max_id = 66332211, 99663322
+
+    try:
+        # Create unique IDs
+        unique_ids = random.sample(range(min_id, max_id + 1), num_rec)
+        id_iter = iter(unique_ids)
+
+        # Generate data and create DataFrame
+        records = generate_refined_data(num_rec, id_iter)
+        df = pd.DataFrame(records)
+        
+        # Set unique_number as the primary index
+        df.set_index('unique_number', inplace=True)
+
+        # Display sample data
+        print("\nGenerated Data for Nagpur:")
+        print(df)
+        
+        # Create mastere folder and save CSV
+        output_dir = Path("mastere")
+        output_dir.mkdir(exist_ok=True)
+        
+        output_file = output_dir / "nagpur_data.csv"
+        df.to_csv(output_file)
+        
+        print(f"\n✓ Data saved to: {output_file.absolute()}")
+        
+        return df
+        
+    except ValueError as e:
+        print(f"Error: {e}")
+        return None
+    except Exception as e:
+        print(f"Unexpected error: {e}")
+        return None
+
+if __name__ == "__main__":
+    df = main()
