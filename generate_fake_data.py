@@ -1,9 +1,14 @@
+# Install (Only if not installed via Cluster UI)
+%pip install Faker 
+
+# Imports (This just CALLS the library, doesn't download it)
 import random
 import pandas as pd
 from faker import Faker
 from typing import Iterator, List, Dict
 from pathlib import Path
 import os
+
 
 # Initialize Faker with 'en_IN' locale
 fake = Faker('en_IN')
@@ -111,3 +116,14 @@ def main():
 
 if __name__ == "__main__":
     df = main()
+
+# # Create folder in DBFS (Permanent storage)
+# output_dir = "/dbfs/mnt/outputs/mastere" 
+# os.makedirs(output_dir, exist_ok=True)
+
+# output_file = f"{output_dir}/nagpur_data.csv"
+# df.to_csv(output_file)
+
+# # Save as a Spark Table (Best for Data Engineering)
+# spark_df = spark.createDataFrame(df.reset_index())
+# spark_df.write.format("delta").mode("overwrite").saveAsTable("nagpur_consumers")
