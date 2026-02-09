@@ -1,3 +1,7 @@
 databricks-sql-connector==3.1.0
 pandas==2.2.0
 apache-airflow-providers-databricks==6.8.0
+geopy==2.4.1
+tqdm==4.66.1
+Faker
+
